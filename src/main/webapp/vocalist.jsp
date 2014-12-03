@@ -66,27 +66,51 @@
                 stat.wrong ++;
         }
 
-        function checkAnswer(answer)
+        function isOtherSolution(words, answer, definition)
+        {
+            for (var i = 0; i < words.length; i++)
+            {
+                var word = words[i]
+                if ((word.word.toLowerCase() == answer.toLowerCase()) &&
+                    (word.definition.toLowerCase() == definition.toLowerCase()))
+                        return true;
+            }
+
+            return false;
+        }
+
+        function onAnswerSent(answer)
         {
             var word = words[index];
+            var showNext = true;
 
             if (word.word.toLowerCase() == answer.toLowerCase())
             {
+                showNext = true;
                 statAdd(word, true);
                 alert('Correct');
             }
+            else if (isOtherSolution(words, answer, word.definition))
+            {
+                showNext = false;
+                alert('Almost, but an other one!');
+            }
             else
             {
+                showNext = true;
                 statAdd(word, false);
                 alert('Wrong: ' + word.word);
             }
 
-            var ret = showNextCard();
-            if (!ret)
+            if (showNext)
             {
-                alert("Quiz ended, statistics:\n" + statStr());
-                $('.flashcard').hide();
-                $('.lists').show();
+                var ret = showNextCard();
+                if (!ret)
+                {
+                    alert("Quiz ended, statistics:\n" + statStr());
+                    $('.flashcard').hide();
+                    $('.lists').show();
+                }
             }
         }
         function showCard()
@@ -185,7 +209,7 @@
 
             $('form.answer').bind('submit', function()
             {
-                checkAnswer($(this).find('input.answer').val());
+                onAnswerSent($(this).find('input.answer').val());
                 return false;
             });
 
