@@ -67,7 +67,7 @@ class RPCResponseWords extends RPCResponse {
 }
 
 
-public class VocalistServlet extends HttpServlet {
+public class VocalistServletOld extends HttpServlet {
 
     private Notebook getNotebookByName(NoteStoreClient noteStore, String name) throws Exception {
         List<Notebook> notebooks = noteStore.listNotebooks();
