@@ -1,0 +1,99 @@
+swagger: '2.0'
+info:
+  version: '1.0.0'
+  title: Vocalist 
+  contact:
+    name: Daniel Torok
+host: ds-vocalist.appspot.com
+basePath: /api
+schemes:
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /vocalists:
+    get:
+      description: Returns with a list of vocalists
+      operationId: listVocalists
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Array if VocalistShort objects
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/VocalistShort'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /vocalists/{title}:
+    get:
+      description: Returns with a full vocalist
+      operationId: getVocalist
+      produces:
+        - application/json
+      parameters:
+        - name: title
+          in: path
+          description: Title of the vocalist
+          required: true
+          type: string
+      responses:
+        '200':
+          description: A full vocalist
+          schema:
+            $ref: '#/definitions/Vocalist'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+definitions:
+  VocalistShort:
+    required:
+      - guid
+      - title
+    properties:
+      guid:
+        type: string
+      title:
+        type: string
+        
+  Vocalist:
+    required:
+      - guid
+      - title
+      - words
+    properties:
+      guid:
+        type: string
+      title:
+        type: string
+      words:
+        type: array
+        items:
+          $ref: '#/definitions/Word'
+  Word:
+    required:
+      - word
+      - definition
+    properties:
+      word:
+        type: string
+      definition:
+        type: string
+
+  Error:
+    required:
+      - code
+      - message
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
