@@ -23,6 +23,7 @@ public class VocalistApi extends HttpServlet {
             throws IOException {
         resp.setContentType("application/json");
         resp.setCharacterEncoding("utf-8");
+        resp.setHeader("Access-Control-Allow-Origin", "*");
 
 //        UserService userService = UserServiceFactory.getUserService();
 //        User currentUser = userService.getCurrentUser();
@@ -68,6 +69,5 @@ public class VocalistApi extends HttpServlet {
         Vocalist vocalist = backend.getVocalist(guid);
 
         resp.getWriter().println(gson.toJson(vocalist));
-
     }
 }
