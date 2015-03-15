@@ -29,7 +29,7 @@ public class VocalistBackend {
             String notebook_name = getProperties().getProperty("notebook_name");
             Notebook notebook = getNotebookByName(noteStore, notebook_name);
             if (notebook == null) {
-                return new LinkedList();
+                return new LinkedList<>();
             }
 
             NoteFilter filter = new NoteFilter();
@@ -48,7 +48,7 @@ public class VocalistBackend {
 
             return l;
         } catch (Exception e) {
-            return new LinkedList();
+            return new LinkedList<>();
         }
     }
 
