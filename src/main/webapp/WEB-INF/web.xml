@@ -17,12 +17,12 @@
 
     <servlet-mapping>
         <servlet-name>vocalist-api</servlet-name>
-        <url-pattern>/api/vocalists/</url-pattern>
+        <url-pattern>/api/v1/vocalists/</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
         <servlet-name>vocalist-api</servlet-name>
-        <url-pattern>/api/vocalists/*</url-pattern>
+        <url-pattern>/api/v1/vocalists/*</url-pattern>
     </servlet-mapping>
 
     <welcome-file-list>
