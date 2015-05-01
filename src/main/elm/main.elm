@@ -1,33 +1,35 @@
 import Html exposing (..)
 import Signal
 
-import FlashCard
+import FlashCardList
 
 type alias Model = 
-    { flashcard: FlashCard.Model
+    { flashcardList: FlashCardList.Model
     }
 
 type Action 
-    = ShowFlashCard String String
-    | FlashCardAction FlashCard.Action
+    = Reset
+    | FlashCardListAction FlashCardList.Action
 
 
 init : Model
 init = 
-    { flashcard = FlashCard.init ("word", "definition")
+    { flashcardList = FlashCardList.init [("1", "11"), ("2", "22"), ("3", "33")]
     }
 
 update : Action -> Model -> Model
 update action model =
     case action of
-        ShowFlashCard word definition -> { model | flashcard <- FlashCard.init (word, definition) }
-        FlashCardAction act -> { model | flashcard <- FlashCard.update act model.flashcard }
+        Reset -> init
+        FlashCardListAction act -> { model | flashcardList <- FlashCardList.update act model.flashcardList }
 
 view : Signal.Address Action -> Model -> Html
-view address model = FlashCard.view (Signal.forwardTo address FlashCardAction) model.flashcard
+view address model = FlashCardList.view (Signal.forwardTo address FlashCardListAction) model.flashcardList
 
+
+-- static
 actions : Signal.Mailbox Action
-actions = Signal.mailbox (ShowFlashCard "word" "definition")
+actions = Signal.mailbox Reset
 
 model : Signal Model
 model = Signal.foldp update init actions.signal
