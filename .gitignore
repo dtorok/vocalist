@@ -3,3 +3,5 @@ config.properties
 target
 eclipse-launch-profiles
 vocalist.iml
+elm-stuff/
+elm.js
