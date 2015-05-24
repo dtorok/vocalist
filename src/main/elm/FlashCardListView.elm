@@ -1,18 +1,23 @@
-module FlashCardList (Model, Action, init, update, view) where
+module FlashCardListView (Model, Action, init, update, view, httpLoader) where
 
 import Html exposing (..)
 import Html.Events exposing (..)
+import Http exposing (Error)
 import Signal
+import Service exposing (Vocalist, Word)
+import Task exposing (Task, andThen)
 
 import FlashCard
 
 type alias Model = 
-    { flashcards: List FlashCard.Model
+    { guid: String
+    , flashcards: List FlashCard.Model
     , index: Int
     }
 
 type Action 
     = Reset
+    | LoadList Vocalist
     | ShowNext
     | ShowPrev
     | FlashCardAction FlashCard.Action
@@ -20,11 +25,26 @@ type Action
 at : List a -> Int -> Maybe a
 at xs n = List.head ( List.drop n xs )
 
-init : List (String, String) -> Model
-init words = 
-    { flashcards = List.map FlashCard.init words
-    , index = 0
-    }
+init : String -> Model
+init guid = 
+    { guid = guid
+    , flashcards = []
+    , index = -1 }
+
+initWithList : List (String, String) -> Model
+initWithList words = 
+    { guid = ""
+    , flashcards = List.map FlashCard.init words
+    , index = 0 }
+
+initWithVocalist : Vocalist -> Model
+initWithVocalist vocalist = 
+    { guid = vocalist.guid
+    , flashcards = List.map word2flashcard vocalist.words
+    , index = 0 }
+
+word2flashcard : Word -> FlashCard.Model
+word2flashcard word = FlashCard.init (word.word, word.definition)
 
 updateCardIfCurrent : FlashCard.Model -> FlashCard.Action -> FlashCard.Model -> FlashCard.Model
 updateCardIfCurrent current act model =
@@ -36,6 +56,7 @@ update : Action -> Model -> Model
 update action model =
     case action of
         Reset -> { model | index <- 0 }
+        LoadList vocalist -> initWithVocalist vocalist
         ShowNext -> { model | index <- min (model.index + 1) ((List.length model.flashcards) - 1) }
         ShowPrev -> { model | index <- max (model.index - 1) 0 }
         FlashCardAction act -> 
@@ -48,7 +69,7 @@ view : Signal.Address Action -> Model -> Html
 view address model = 
     let current = (model.flashcards `at` model.index)
     in case current of
-        Nothing -> div [] [text ("No list set yet")]
+        Nothing -> div [] [text ("Loading...")]
         Just flashcard -> viewFlashCard address flashcard
 
 viewFlashCard : Signal.Address Action -> FlashCard.Model -> Html
@@ -59,11 +80,22 @@ viewFlashCard address model =
         , button [ onClick address ShowNext ] [ text " >> next " ]
         ]
 
-actions : Signal.Mailbox Action
-actions = Signal.mailbox Reset
+httpLoader : Model -> Signal.Address Action -> Task Http.Error ()
+httpLoader model address = 
+    case model.flashcards of
+        [] -> Service.getVocalist model.guid
+                            `andThen` \list -> Signal.send address (LoadList list)
+        _ -> Task.succeed ()
+    --case model.guid of
+    --    "" -> Task.succeed ()
+    --    guid -> Service.getVocalist guid
+    --                        `andThen` \list -> Signal.send address (LoadList list)
 
-model : Signal Model
-model = Signal.foldp update (init [("a", "b")]) actions.signal
+--actions : Signal.Mailbox Action
+--actions = Signal.mailbox Reset
 
-main : Signal Html
-main = Signal.map (view actions.address) model
+--model : Signal Model
+--model = Signal.foldp update (initWithList [("a", "b")]) actions.signal
+
+--main : Signal Html
+--main = Signal.map (view actions.address) model

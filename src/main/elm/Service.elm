@@ -1,7 +1,6 @@
 module Service (
     Word, VocalistShort, Vocalist, 
-    getVocalist) where
---    getVocalistShortlist, getVocalist) where
+    getVocalistShortlist, getVocalist) where
 
 import Http
 import Json.Decode exposing (..)
