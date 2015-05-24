@@ -34,4 +34,14 @@ testComm =
             Ok v -> v.title
     in f' <~ (getVocalist (f <~ getVocalistShortlist))
 
-main = plainText <~ testComm
+renderList : Result String (List VocalistShort) -> String
+renderList res = case res of
+    Ok list -> List.foldl (\x y -> x ++ "\n" ++ y) "" (List.map (\x -> x.title) list)
+    Err err -> err
+
+input =
+
+showList : Signal String
+showList = renderList <~ getVocalistShortlist
+
+main = plainText <~ showList
