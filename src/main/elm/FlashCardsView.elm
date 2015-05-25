@@ -11,6 +11,7 @@ import FlashCard
 
 type alias Model = 
     { guid: String
+    , title: String
     , flashcards: List FlashCard.Model
     , index: Int
     }
@@ -28,18 +29,21 @@ at xs n = List.head ( List.drop n xs )
 init : String -> Model
 init guid = 
     { guid = guid
+    , title = ""
     , flashcards = []
     , index = -1 }
 
 initWithList : List (String, String) -> Model
 initWithList words = 
     { guid = ""
+    , title = ""
     , flashcards = List.map FlashCard.init words
     , index = 0 }
 
 initWithVocalist : Vocalist -> Model
 initWithVocalist vocalist = 
     { guid = vocalist.guid
+    , title = vocalist.title
     , flashcards = List.map word2flashcard vocalist.words
     , index = 0 }
 
@@ -69,8 +73,12 @@ view : Signal.Address Action -> Model -> Html
 view address model = 
     let current = (model.flashcards `at` model.index)
     in case current of
-        Nothing -> div [] [text ("Loading...")]
-        Just flashcard -> viewFlashCard address flashcard
+        Nothing -> 
+            div [] [text ("Loading...")]
+
+        Just flashcard -> 
+            div [] [ h1 [] [ text model.title ]
+                   , viewFlashCard address flashcard ]
 
 viewFlashCard : Signal.Address Action -> FlashCard.Model -> Html
 viewFlashCard address model =

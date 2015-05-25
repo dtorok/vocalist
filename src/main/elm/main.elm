@@ -7,6 +7,7 @@ import Task exposing (Task, andThen)
 import Service
 import ListView
 import FlashCardsView
+import WelcomeView
 
 type View 
     = Welcome
@@ -14,10 +15,9 @@ type View
     | FlashCardsView
 
 type alias Model = 
-    {
-        view: View,
-        listViewModel: ListView.Model,
-        flashCardsModel: FlashCardsView.Model
+    { view: View
+    , listViewModel: ListView.Model
+    , flashCardsModel: FlashCardsView.Model
     }
 
 type Action
@@ -29,6 +29,7 @@ type Action
 
 type alias Context =
     { actions: Signal.Mailbox Action
+    , callbackShowList: Signal.Mailbox ()
     , callbackShowFlashcards: Signal.Mailbox String
     }
 
@@ -67,12 +68,9 @@ view context model =
 viewContent : Context -> Model -> Html
 viewContent context model =
     case model.view of
-        Welcome -> div [] 
-                       [ h1 [] [text "Welcome!"]
-                       , ul [] 
-                            [ li [ onClick context.actions.address ShowList, class "button1" ] [ text "start" ]
-                            ]
-                       ]
+        Welcome ->
+            WelcomeView.view
+                context.callbackShowList.address
 
         ListView -> 
             ListView.view 
@@ -89,14 +87,17 @@ viewContent context model =
 context : Context
 context = 
     { actions = Signal.mailbox Reset
-    , callbackShowFlashcards = Signal.mailbox "" }
+    , callbackShowFlashcards = Signal.mailbox "" 
+    , callbackShowList = Signal.mailbox () }
 
 model : Signal Model
 model = 
     Signal.foldp update init <|
-        Signal.merge 
-            context.actions.signal
-            (Signal.map ShowFlashards context.callbackShowFlashcards.signal)
+        Signal.mergeMany
+            [ context.actions.signal
+            , (Signal.map ShowFlashards context.callbackShowFlashcards.signal)
+            , (Signal.map (always ShowList) context.callbackShowList.signal)
+            ]
     
 
 httpLoaderBroadcast : Signal.Address Action -> Model -> Task Http.Error ()

@@ -2,6 +2,7 @@ module ListView (Model, Action, init, initWithList, update, view, httpLoader) wh
 
 import Signal
 import Html exposing (..)
+import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Http exposing (Error)
 import Task exposing (Task, andThen)
@@ -38,11 +39,15 @@ view address callbackAddress model =
             div [] [ text "Loading..."]
         Just list -> 
             div []
-                [ ul [] (List.map (viewListItem callbackAddress) list)
+                [ h1 [] [ text "Vocalist" ]
+                , ul [] (List.map (viewListItem callbackAddress) list)
                 ]
 
 viewListItem : Signal.Address String -> VocalistShort -> Html
-viewListItem callbackAddress vocalist = li [onClick callbackAddress vocalist.guid] [ text vocalist.title ]
+viewListItem callbackAddress vocalist = 
+    li [] 
+       [ text vocalist.title 
+       , button [class "li-button", onClick callbackAddress vocalist.guid] [ text "Flashcards" ]]
 
 httpLoader : Model -> Signal.Address Action -> Task Http.Error ()
 httpLoader model address = 
