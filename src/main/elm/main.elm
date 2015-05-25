@@ -6,16 +6,18 @@ import Task exposing (Task, andThen)
 
 import Service
 import ListView
-import FlashCardListView
+import FlashCardsView
 
 type View 
     = Welcome
-    | ListView ListView.Model 
-    | FlashCardListView FlashCardListView.Model
+    | ListView
+    | FlashCardsView
 
 type alias Model = 
     {
-        view: View
+        view: View,
+        listViewModel: ListView.Model,
+        flashCardsModel: FlashCardsView.Model
     }
 
 type Action
@@ -23,33 +25,37 @@ type Action
     | ShowList
     | ShowFlashards String
     | ListViewAction ListView.Action
-    | FlashCardViewAction FlashCardListView.Action
--- (List Service.VocalistShort)
+    | FlashCardsViewAction FlashCardsView.Action
 
 type alias Context =
     { actions: Signal.Mailbox Action
-    , callbackListItemSelected: Signal.Mailbox String
+    , callbackShowFlashcards: Signal.Mailbox String
     }
 
 init : Model
 init = 
-    { view = Welcome }
+    { view = Welcome 
+    , listViewModel = ListView.init 
+    , flashCardsModel = FlashCardsView.init "" }
 
 update : Action -> Model -> Model
 update action bigmodel = 
     case action of
         Reset -> bigmodel
-        --ShowList list -> { model | view <- ListView (ListView.initWithList list) }
-        ShowList -> { bigmodel | view <- ListView (ListView.init) }
-        ShowFlashards guid -> {bigmodel | view <- FlashCardListView (FlashCardListView.init guid) }
+
+        ShowList -> 
+            { bigmodel | view <- ListView
+                       , listViewModel <- ListView.init }
+
+        ShowFlashards guid -> 
+            { bigmodel | view <- FlashCardsView
+                       , flashCardsModel <- FlashCardsView.init guid }
+
         ListViewAction act -> 
-            case bigmodel.view of
-                ListView model -> { bigmodel | view <- ListView <| ListView.update act model }
-                otherwise -> bigmodel
-        FlashCardViewAction act -> 
-            case bigmodel.view of
-                FlashCardListView model -> { bigmodel | view <- FlashCardListView <| FlashCardListView.update act model }
-                otherwise -> bigmodel
+            { bigmodel | listViewModel <- ListView.update act bigmodel.listViewModel }
+
+        FlashCardsViewAction act -> 
+            { bigmodel | flashCardsModel <- FlashCardsView.update act bigmodel.flashCardsModel }
 
 view : Context -> Model -> Html
 view context model = 
@@ -67,43 +73,47 @@ viewContent context model =
                             [ li [ onClick context.actions.address ShowList, class "button1" ] [ text "start" ]
                             ]
                        ]
-        ListView model -> 
+
+        ListView -> 
             ListView.view 
                 (Signal.forwardTo context.actions.address ListViewAction)
-                context.callbackListItemSelected.address
-                model
-        FlashCardListView model -> 
-            FlashCardListView.view 
-                (Signal.forwardTo context.actions.address FlashCardViewAction) 
-                model
+                context.callbackShowFlashcards.address
+                model.listViewModel
+
+        FlashCardsView -> 
+            FlashCardsView.view 
+                (Signal.forwardTo context.actions.address FlashCardsViewAction) 
+                model.flashCardsModel
 
 -- static
 context : Context
 context = 
     { actions = Signal.mailbox Reset
-    , callbackListItemSelected = Signal.mailbox ""
-    }
+    , callbackShowFlashcards = Signal.mailbox "" }
 
 model : Signal Model
-model = Signal.foldp update init (
+model = 
+    Signal.foldp update init <|
         Signal.merge 
-        context.actions.signal
-        (Signal.map ShowFlashards context.callbackListItemSelected.signal)
-    )
+            context.actions.signal
+            (Signal.map ShowFlashards context.callbackShowFlashcards.signal)
+    
 
 httpLoaderBroadcast : Signal.Address Action -> Model -> Task Http.Error ()
 httpLoaderBroadcast address bigmodel = 
     case bigmodel.view of
         Welcome -> Task.succeed ()
-        ListView model -> ListView.httpLoader model (Signal.forwardTo address ListViewAction)
-        FlashCardListView model -> FlashCardListView.httpLoader model (Signal.forwardTo address FlashCardViewAction)
+
+        ListView -> ListView.httpLoader 
+                                bigmodel.listViewModel 
+                                (Signal.forwardTo address ListViewAction)
+
+        FlashCardsView -> FlashCardsView.httpLoader 
+                                bigmodel.flashCardsModel 
+                                (Signal.forwardTo address FlashCardsViewAction)
 
 port httpLoader : Signal (Task Http.Error ())
 port httpLoader = Signal.map (httpLoaderBroadcast context.actions.address) model
-
---port loadShortList : Task Http.Error ()
---port loadShortList = Service.getVocalistShortlist 
---                        `andThen` \list -> Signal.send actions.address (ShowList list)
 
 main : Signal Html
 main = Signal.map (view context) model

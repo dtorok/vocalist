@@ -1,4 +1,4 @@
-module FlashCardListView (Model, Action, init, update, view, httpLoader) where
+module FlashCardsView (Model, Action, init, update, view, httpLoader) where
 
 import Html exposing (..)
 import Html.Events exposing (..)
