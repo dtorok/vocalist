@@ -1,4 +1,4 @@
-module FlashCardsView (Model, Action, init, update, view, httpLoader) where
+module FlashCardsView (Model, Action, init, initWithList, update, view, httpLoader) where
 
 import Html exposing (..)
 import Html.Events exposing (..)
@@ -94,16 +94,3 @@ httpLoader model address =
         [] -> Service.getVocalist model.guid
                             `andThen` \list -> Signal.send address (LoadList list)
         _ -> Task.succeed ()
-    --case model.guid of
-    --    "" -> Task.succeed ()
-    --    guid -> Service.getVocalist guid
-    --                        `andThen` \list -> Signal.send address (LoadList list)
-
---actions : Signal.Mailbox Action
---actions = Signal.mailbox Reset
-
---model : Signal Model
---model = Signal.foldp update (initWithList [("a", "b")]) actions.signal
-
---main : Signal Html
---main = Signal.map (view actions.address) model
