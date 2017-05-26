@@ -35,7 +35,7 @@ type alias Context =
 
 init : Model
 init = 
-    { view = Welcome
+    { view = FlashCardsView
     , listViewModel = ListView.init 
     , flashCardsModel = FlashCardsView.initWithList [("word", "hungarian definition")] }
 
